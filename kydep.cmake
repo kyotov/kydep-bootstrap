@@ -1,44 +1,28 @@
-include_guard(GLOBAL)
-
-include(ExternalProject)
-include(FetchContent)
-
-# fetch definitions from github
-FetchContent_Declare(definitions
-    GIT_REPOSITORY https://github.com/kyotov/kydep-definitions.git
-    GIT_TAG main
-)
-FetchContent_MakeAvailable(definitions)
-list(APPEND CMAKE_MODULE_PATH "${definitions_SOURCE_DIR}")
-
 macro(KyDep NAME)
-    include_guard(GLOBAL)
 
-    set(DIR "${CMAKE_BINARY_DIR}/${NAME}")
-
-    list(APPEND KYDEPS_CONTEXT "${NAME};${ARGN};;;")
+    include(ExternalProject)
 
     ExternalProject_Add(${NAME}
-        PREFIX "${DIR}"
+        PREFIX "${NAME}"
         
-        BINARY_DIR "${DIR}/b"
-        SOURCE_DIR "${DIR}/s"
-        STAMP_DIR "${DIR}/ts"
-        TMP_DIR "${DIR}/tmp"
-        LOG_DIR "${DIR}/log"
+        BINARY_DIR "${NAME}/b"
+        SOURCE_DIR "${NAME}/s"
+        STAMP_DIR "${NAME}/ts"
+        TMP_DIR "${NAME}/tmp"
+        LOG_DIR "${NAME}/log"
 
         CMAKE_ARGS
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -DCMAKE_INSTALL_PREFIX:PATH=${DIR}/i
+        -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -D CMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/${NAME}/i
+        -D "CMAKE_MESSAGE_INDENT=${CMAKE_MESSAGE_INDENT}[${NAME}]"
 
         ${ARGN}
     )
 
     set(DEPENDS_ON_${NAME}
         CMAKE_ARGS
-        -DCMAKE_PREFIX_PATH:PATH=${DIR}/i
+        -DCMAKE_PREFIX_PATH:PATH=${CMAKE_BINARY_DIR}/${NAME}/i
         DEPENDS ${NAME}
     )
 
-    unset(DIR)
 endmacro()
