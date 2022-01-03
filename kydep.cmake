@@ -1,28 +1,53 @@
-macro(KyDep NAME)
+include(ExternalProject)
+include(tools)
+include(configure)
 
-    include(ExternalProject)
+Configure("")
 
-    ExternalProject_Add(${NAME}
-        PREFIX "${NAME}"
-        
-        BINARY_DIR "${NAME}/b"
-        SOURCE_DIR "${NAME}/s"
-        STAMP_DIR "${NAME}/ts"
-        TMP_DIR "${NAME}/tmp"
-        LOG_DIR "${NAME}/log"
+# KyDep -- main implementation of KyDep macro
+#
+# This is a shim around ExternalProject_Add with some enchancements Note: if the
+# package is already installed under /i, this is a noop
+#
+macro(KyDep KYDEP)
+    Configure("${KYDEP}")
+    AddContext("KyDep::build")
 
-        CMAKE_ARGS
-        -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -D CMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/${NAME}/i
-        -D "CMAKE_MESSAGE_INDENT=${CMAKE_MESSAGE_INDENT}[${NAME}]"
+    DefineVars(${KYDEP} ${ARGN})
+    set(_KEY "${KYDEP}.${${KYDEP}_HASH}")
 
-        ${ARGN}
-    )
+    if(EXISTS "${ROOT_BINARY_DIR}/i/${_KEY}")
+        AddContext("exists::noop")
+        add_custom_target(${KYDEP} COMMENT "noop")
+    elseif(NOT KYDEPS_BUILD)
+        AddContext("disabled")
+    else()
+        AddContext("building")
+        set(_DIR "${kydeps_BINARY_DIR}/${_KEY}")
+        ExternalProject_Add(
+            ${KYDEP}
+            PREFIX "${_DIR}"
+            BINARY_DIR "${_DIR}/b"
+            SOURCE_DIR "${_DIR}/s"
+            STAMP_DIR "${_DIR}/ts"
+            TMP_DIR "${_DIR}/tmp"
+            LOG_DIR "${_DIR}/log"
+            CMAKE_ARGS
+                "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" #
+                "-DCMAKE_INSTALL_PREFIX:PATH=${ROOT_BINARY_DIR}/i/${_KEY}" #
+                "-DCMAKE_MESSAGE_CONTEXT_SHOW=ON" #
+                "-DCMAKE_MESSAGE_CONTEXT=CMake(${KYDEP})" #
+                "-DCMAKE_INSTALL_MESSAGE=NEVER" #
+                ${ARGN})
 
-    set(DEPENDS_ON_${NAME}
-        CMAKE_ARGS
-        -DCMAKE_PREFIX_PATH:PATH=${CMAKE_BINARY_DIR}/${NAME}/i
-        DEPENDS ${NAME}
-    )
+    endif()
+
+    message(STATUS "${_KEY}")
+    PopContext()
+    PopContext()
+endmacro()
+
+# KyDepRegister -- a shim for KyDepRegister when run in build mode
+macro(KyDepRegister)
 
 endmacro()
