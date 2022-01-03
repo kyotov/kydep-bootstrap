@@ -1,28 +1,32 @@
-macro(KyDep NAME)
+include(ExternalProject)
+include(tools)
 
-    include(ExternalProject)
+# a thin wrapper around ExternalProject_Add with some good defaults
+macro(KyDep name)
 
-    ExternalProject_Add(${NAME}
-        PREFIX "${NAME}"
-        
-        BINARY_DIR "${NAME}/b"
-        SOURCE_DIR "${NAME}/s"
-        STAMP_DIR "${NAME}/ts"
-        TMP_DIR "${NAME}/tmp"
-        LOG_DIR "${NAME}/log"
+    define_vars(${name} ${ARGN})
 
-        CMAKE_ARGS
-        -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -D CMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/${NAME}/i
-        -D "CMAKE_MESSAGE_INDENT=${CMAKE_MESSAGE_INDENT}[${NAME}]"
+    set(i_dir "${ROOT_BINARY_DIR}/i/${name}.${${name}_HASH}")
 
-        ${ARGN}
-    )
-
-    set(DEPENDS_ON_${NAME}
-        CMAKE_ARGS
-        -DCMAKE_PREFIX_PATH:PATH=${CMAKE_BINARY_DIR}/${NAME}/i
-        DEPENDS ${NAME}
-    )
+    if(EXISTS "${i_dir}")
+        message(STATUS "[KYDEP] ${i_dir} already installed, skipping build...")
+        add_custom_target(${name})
+    else()
+        set(dir "${kydeps_BINARY_DIR}/${name}.${${name}_HASH}")
+        ExternalProject_Add(
+            ${name}
+            PREFIX "${dir}"
+            BINARY_DIR "${dir}/b"
+            SOURCE_DIR "${dir}/s"
+            STAMP_DIR "${dir}/ts"
+            TMP_DIR "${dir}/tmp"
+            LOG_DIR "${dir}/log"
+            CMAKE_ARGS
+                "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" #
+                "-DCMAKE_INSTALL_PREFIX:PATH=${i_dir}" #
+                "-DCMAKE_MESSAGE_INDENT=${CMAKE_MESSAGE_INDENT}[${name}]" #
+                "-DCMAKE_INSTALL_MESSAGE=NEVER" #
+                ${ARGN})
+    endif()
 
 endmacro()
