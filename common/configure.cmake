@@ -16,13 +16,19 @@ macro(Configure KYDEP)
 
     SetIfEmpty(KYDEPS_BUILD_TESTS OFF)
 
-    SetIfEmpty(KYDEPS_LOG_LEVEL DEBUG)
+    SetIfEmpty(KYDEPS_LOG_LEVEL STATUS)
 
     SetIfEmpty(KYDEPS_TARGETS all)
 
+    SetIfEmpty(ROOT_BINARY_DIR "${CMAKE_BINARY_DIR}")
+
+    SetIfEmpty(KYDEPS_CI_UNIVERSE_CONFIGURE OFF)
+
+    SetIfEmpty(KYDEPS_CACHE_BUCKET "file://${KYDEPS_CACHE_DIR}")
+
     # TODO(kamen): document the below carefully
     SetIfEmpty(KYDEPS_BUILD_ONE_ENABLED OFF)
-    if(KYDEPS_BUILD_ONE_ENABLED)
+    if(KYDEPS_BUILD_ONE_ENABLED AND NOT KYDEPS_CI_UNIVERSE_CONFIGURE)
         KySetAssertMessage(
             "
     KYDEPS_BUILD_ONE_ENABLED is ON, *therefore*

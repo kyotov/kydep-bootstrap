@@ -87,7 +87,7 @@ function(CacheUpdate KYDEP)
             file(SHA256 "${ROOT_BINARY_DIR}/c/${_KEY}.zip" SHA256)
 
             file(
-                APPEND "${ROOT_BINARY_DIR}/c/cache.cmake"
+                WRITE "${ROOT_BINARY_DIR}/c/${_KEY}.cmake"
                 "
 ${${KYDEP}_MANIFEST}
 #
