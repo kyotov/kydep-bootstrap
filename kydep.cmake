@@ -27,6 +27,7 @@ macro(KyDep KYDEP)
         ExternalProject_Add(
             ${KYDEP}
             PREFIX "${_DIR}"
+            INSTALL_DIR "${ROOT_BINARY_DIR}/i/${_KEY}"
             BINARY_DIR "${_DIR}/b"
             SOURCE_DIR "${_DIR}/s"
             STAMP_DIR "${_DIR}/ts"
